@@ -1,0 +1,182 @@
+[
+  {
+    "id": "wave_port_setup",
+    "question": "波端口怎么设置？",
+    "expected_source_contains": ["Wave_Port"],
+    "required_terms": ["入口位置", "操作步骤", "关键参数", "限制条件", "引用来源"]
+  },
+  {
+    "id": "wave_port_integration_line",
+    "question": "波端口积分线怎么设置？",
+    "expected_source_contains": ["Wave_Port", "Integration_Line"],
+    "required_terms": ["积分线", "引用来源"]
+  },
+  {
+    "id": "lumped_port_setup",
+    "question": "集总端口怎么设置？",
+    "expected_source_contains": ["Lumped_Port"],
+    "required_terms": ["入口位置", "限制条件", "引用来源"]
+  },
+  {
+    "id": "point_source_setup",
+    "question": "点激励源怎么设置？",
+    "expected_source_contains": ["Create_Point_Source"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "plane_wave_setup",
+    "question": "平面波激励怎么设置？",
+    "expected_source_contains": ["Plane_Wave"],
+    "required_terms": ["入口位置", "关键参数", "限制条件", "引用来源"]
+  },
+  {
+    "id": "pml_boundary",
+    "question": "PML 边界怎么设置？",
+    "expected_source_contains": ["Boundary"],
+    "required_terms": ["PML", "入口位置", "引用来源"]
+  },
+  {
+    "id": "abc_vs_pml",
+    "question": "WavEDA 里的 PML 和吸收边界有什么关系？",
+    "expected_source_contains": ["Boundary"],
+    "required_terms": ["PML", "吸收边界", "引用来源"]
+  },
+  {
+    "id": "default_boundary",
+    "question": "默认边界条件怎么设置？",
+    "expected_source_contains": ["Boundary"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "three_d_mesh",
+    "question": "3D 网格怎么设置？",
+    "expected_source_contains": ["3D_Mesh"],
+    "required_terms": ["入口位置", "关键参数", "引用来源"]
+  },
+  {
+    "id": "waveport_mesh",
+    "question": "波端口网格怎么设置？",
+    "expected_source_contains": ["Waveport_Mesh"],
+    "required_terms": ["波端口", "网格", "引用来源"]
+  },
+  {
+    "id": "adaptive_mesh",
+    "question": "自适应网格怎么设置？",
+    "expected_source_contains": ["Adaptive_Mesh"],
+    "required_terms": ["网格", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "bad_mesh_troubleshooting",
+    "question": "病态网格怎么排查？",
+    "expected_source_contains": ["Show_Mesh", "troubleshooting", "constraint_warning"],
+    "required_terms": ["常见错误", "引用来源"]
+  },
+  {
+    "id": "prism_setup",
+    "question": "怎么设置棱柱？",
+    "expected_source_contains": ["Prism"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "toroidal_spiral",
+    "question": "怎么设置环形螺旋线圈？",
+    "expected_source_contains": ["Toroidal_Spiral"],
+    "required_terms": ["入口位置", "关键参数", "引用来源"]
+  },
+  {
+    "id": "cylinder_setup",
+    "question": "圆柱怎么创建？",
+    "expected_source_contains": ["Cylinder"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "boolean_operation",
+    "question": "布尔操作怎么用？",
+    "expected_source_contains": ["Boolean"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "face_thicken",
+    "question": "加厚面怎么设置？",
+    "expected_source_contains": ["Face_Thicken"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "material_library",
+    "question": "材料库怎么选材料？",
+    "expected_source_contains": ["Materials", "50_material_library"],
+    "required_terms": ["入口位置", "关键参数", "引用来源"]
+  },
+  {
+    "id": "fr4_material",
+    "question": "FR-4 材料参数怎么看？",
+    "expected_source_contains": ["50_material_library", "Materials"],
+    "required_terms": ["FR-4", "材料", "引用来源"]
+  },
+  {
+    "id": "pec_material",
+    "question": "PEC 材料适合什么场景？",
+    "expected_source_contains": ["50_material_library", "Materials"],
+    "required_terms": ["PEC", "材料", "引用来源"]
+  },
+  {
+    "id": "frequency_setup",
+    "question": "频率怎么设置？",
+    "expected_source_contains": ["Frequency"],
+    "required_terms": ["入口位置", "关键参数", "引用来源"]
+  },
+  {
+    "id": "solver_setup",
+    "question": "求解器怎么设置？",
+    "expected_source_contains": ["Solver"],
+    "required_terms": ["入口位置", "关键参数", "引用来源"]
+  },
+  {
+    "id": "variables",
+    "question": "变量怎么定义？",
+    "expected_source_contains": ["Variables"],
+    "required_terms": ["入口位置", "限制条件", "引用来源"]
+  },
+  {
+    "id": "simulation_failed",
+    "question": "WavEDA 仿真失败怎么排查？",
+    "expected_source_contains": ["constraint_warning", "troubleshooting", "Simulation"],
+    "required_terms": ["常见错误", "限制条件", "引用来源"]
+  },
+  {
+    "id": "parameter_sweep",
+    "question": "参数化扫描怎么设置？",
+    "expected_source_contains": ["Parameter_Sweep"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "details_logs",
+    "question": "详细日志在哪里看？",
+    "expected_source_contains": ["Details_logs"],
+    "required_terms": ["入口位置", "引用来源"]
+  },
+  {
+    "id": "export_snp",
+    "question": "S 参数怎么导出 sNp？",
+    "expected_source_contains": ["Export_Snp"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "far_field",
+    "question": "远场结果怎么查看？",
+    "expected_source_contains": ["Far_field"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "field_result",
+    "question": "场结果怎么查看？",
+    "expected_source_contains": ["Field_Result"],
+    "required_terms": ["入口位置", "操作步骤", "引用来源"]
+  },
+  {
+    "id": "maxwell_definition",
+    "question": "什么是 Maxwell 方程组？",
+    "expected_source_contains": ["Maxwell"],
+    "required_terms": ["Maxwell", "引用来源"]
+  }
+]

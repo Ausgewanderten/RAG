@@ -1,0 +1,28 @@
+# Secrets and local configuration
+.env
+config/.env
+*.key
+*.pem
+
+# Local Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Generated RAG data and local indexes
+data/
+*.npy
+
+# Local portable/runtime bundles
+RAGGG-Portable/
+runtime/
+*.zip
+*.7z
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
