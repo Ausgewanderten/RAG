@@ -156,6 +156,8 @@ def _read_json(path: Path) -> str:
 def _title_from_text(text: str, fallback: str) -> str:
     for line in text.splitlines():
         stripped = line.strip().lstrip("#").strip()
+        if re.fullmatch(r"(第\s*\d+\s*页|Page\s+\d+)", stripped, flags=re.IGNORECASE):
+            continue
         if stripped:
             return stripped[:80]
     return fallback

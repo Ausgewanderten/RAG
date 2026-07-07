@@ -14,6 +14,7 @@ __pycache__/
 # Generated RAG data and local indexes
 data/
 *.npy
+knowledge_sources/user_dropbox/
 
 # Local portable/runtime bundles
 RAGGG-Portable/

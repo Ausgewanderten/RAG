@@ -360,6 +360,7 @@ class WorkbenchWindow(QMainWindow):
         super().__init__()
         self.settings = settings
         self.pipeline: RAGPipeline | None = None
+        self.index_signature: tuple[tuple[int, int], tuple[int, int]] | None = None
         self.thread_pool = QThreadPool.globalInstance()
         self._active_workers: list[Worker] = []
         self.is_busy = False
@@ -543,11 +544,13 @@ class WorkbenchWindow(QMainWindow):
         index_dir = self.settings.data_dir / "index"
         if not (index_dir / "chunks.json").exists() or not (index_dir / "vectors.npy").exists():
             self.pipeline = None
+            self.index_signature = None
             self.status_card.set_value("未构建", COLORS["danger"])
             self.chunk_card.set_value("-", COLORS["warning"])
             self.sources.setHtml(self._empty_sources_html("知识库尚未构建。请点击左侧“重建知识库”。"))
             return
         self.pipeline = RAGPipeline(self.settings)
+        self.index_signature = self._current_index_signature()
         self.status_card.set_value("已载入", COLORS["accent"])
         self.chunk_card.set_value(str(len(self.pipeline.store.chunks)), COLORS["warning"])
         model_name = self.settings.llm_model if self.settings.llm_api_key else "本地片段"
@@ -607,6 +610,20 @@ class WorkbenchWindow(QMainWindow):
         if self.pipeline is None:
             QMessageBox.information(self, "未载入知识库", "请先重建或载入知识库。")
             return
+        if self._index_changed_on_disk():
+            self._load_pipeline_if_ready()
+        self._check_source_updates(show_prompt=False)
+        if self.sources_changed:
+            choice = QMessageBox.question(
+                self,
+                "资料有更新",
+                SOURCE_UPDATE_MESSAGE + "\n\n是否先更新知识库再提问？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if choice == QMessageBox.Yes:
+                self._rebuild_async()
+                return
         self.question.clear()
         self._append_user(text)
         self._set_busy(True, "正在检索与生成")
@@ -620,6 +637,23 @@ class WorkbenchWindow(QMainWindow):
         self._active_workers.append(worker)
         worker.signals.finished.connect(lambda: self._forget_worker(worker))
         self.thread_pool.start(worker)
+
+    def _current_index_signature(self) -> tuple[tuple[int, int], tuple[int, int]] | None:
+        index_dir = self.settings.data_dir / "index"
+        chunks_path = index_dir / "chunks.json"
+        vectors_path = index_dir / "vectors.npy"
+        if not chunks_path.exists() or not vectors_path.exists():
+            return None
+        chunks_stat = chunks_path.stat()
+        vectors_stat = vectors_path.stat()
+        return (
+            (chunks_stat.st_size, chunks_stat.st_mtime_ns),
+            (vectors_stat.st_size, vectors_stat.st_mtime_ns),
+        )
+
+    def _index_changed_on_disk(self) -> bool:
+        current = self._current_index_signature()
+        return current is not None and current != self.index_signature
 
     def _forget_worker(self, worker: Worker) -> None:
         if worker in self._active_workers:

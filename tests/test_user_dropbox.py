@@ -81,6 +81,8 @@ class UserDropboxTests(unittest.TestCase):
             self.assertIn("波端口", texts)
             self.assertIn("积分线", texts)
             self.assertEqual({doc.source_type for doc in docs}, {"user_dropbox"})
+            pdf_doc = next(doc for doc in docs if doc.relative_path == "guide.pdf")
+            self.assertEqual(pdf_doc.title, "Wave port PDF text")
 
     def test_copy_to_dropbox_keeps_supported_files_and_renames_collisions(self):
         from raggg.pipeline.dropbox import copy_to_dropbox
