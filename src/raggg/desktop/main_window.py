@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QTextBrowser,
     QVBoxLayout,
@@ -64,6 +65,13 @@ QFrame#panel {{
     background: {COLORS["surface"]};
     border: 1px solid {COLORS["border"]};
     border-radius: 12px;
+}}
+QScrollArea {{
+    background: transparent;
+    border: 0;
+}}
+QScrollArea QWidget {{
+    background: transparent;
 }}
 QFrame#metricCard, QFrame#sourceCard {{
     background: {COLORS["surface2"]};
@@ -326,13 +334,17 @@ class MetricCard(QFrame):
     def __init__(self, label: str, value: str, color: str = COLORS["accent"]) -> None:
         super().__init__()
         self.setObjectName("metricCard")
+        self.setMinimumHeight(76)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14, 12, 14, 12)
-        layout.setSpacing(4)
+        layout.setSpacing(6)
         title = QLabel(label)
         title.setObjectName("metricLabel")
+        title.setMinimumHeight(18)
         self.value_label = QLabel(value)
         self.value_label.setObjectName("metricValue")
+        self.value_label.setMinimumHeight(26)
+        self.value_label.setWordWrap(True)
         self.value_label.setStyleSheet(f"color: {color};")
         layout.addWidget(title)
         layout.addWidget(self.value_label)
@@ -398,7 +410,19 @@ class WorkbenchWindow(QMainWindow):
 
     def _left_panel(self) -> QFrame:
         panel = self._panel(270)
-        layout = QVBoxLayout(panel)
+        outer_layout = QVBoxLayout(panel)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        outer_layout.addWidget(scroll_area)
+
+        content = QWidget()
+        scroll_area.setWidget(content)
+        layout = QVBoxLayout(content)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
