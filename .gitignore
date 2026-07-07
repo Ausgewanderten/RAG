@@ -22,6 +22,9 @@ runtime/
 *.zip
 *.7z
 
+# Superseded export attempts
+exports/waveda_merged_markdown_kb_2026-07-07/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db
