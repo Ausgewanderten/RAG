@@ -44,6 +44,10 @@ def build_prompt(question: str, sources: list[SearchResult]) -> str:
     joined = "\n\n".join(snippets)
     base = (
         "你是一个中文 RAG 助手。只根据给定资料回答；资料不足时说明不足。\n\n"
+        "回答规则：\n"
+        "1. 如果资料中出现用户询问的术语，并描述了它的用途、功能、流程、指标或所属领域，请直接概括它是什么，不要因为资料没有字典式定义就说无法回答。\n"
+        "2. 只有给定资料完全没有相关术语或相关描述时，才说明资料不足。\n"
+        "3. 回答必须给出引用编号。\n\n"
         f"问题：{question}\n\n"
         f"资料：\n{joined}\n\n"
     )

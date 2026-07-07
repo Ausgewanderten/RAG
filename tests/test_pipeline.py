@@ -218,6 +218,32 @@ class PipelineTests(unittest.TestCase):
         for section in ("入口位置", "操作步骤", "关键参数", "限制条件", "常见错误", "引用来源"):
             self.assertIn(section, prompt)
 
+    def test_general_prompt_treats_descriptions_as_answerable(self):
+        from raggg.generation.prompt_builder import build_prompt
+        from raggg.models import Chunk
+        from raggg.retrieval.retriever import SearchResult
+
+        chunk = Chunk(
+            id="sfgen",
+            source_type="user_dropbox",
+            source_path="SFgen_prcv.pdf",
+            relative_path="SFgen_prcv.pdf",
+            title="Symbol and Footprint Database",
+            section="",
+            content="SFgen is an MLLM-based agentic solution for symbol and footprint generation of PCB components.",
+            links=[],
+            images=[],
+            metadata={},
+        )
+
+        prompt = build_prompt(
+            "什么是SFgen",
+            [SearchResult(chunk=chunk, score=1.0, vector_score=0.5, lexical_score=0.5)],
+        )
+
+        self.assertIn("请直接概括它是什么", prompt)
+        self.assertIn("不要因为资料没有字典式定义就说无法回答", prompt)
+
     def test_operational_local_answer_uses_tutorial_sections(self):
         from raggg.generation.prompt_builder import build_local_answer
         from raggg.models import Chunk
