@@ -166,6 +166,57 @@ class PipelineTests(unittest.TestCase):
             self.assertNotIn("模型调用失败", answer.answer)
             self.assertIn("模型暂不可用", answer.warning or "")
 
+    def test_pipeline_falls_back_when_llm_denies_retrieved_term(self):
+        from raggg.config import Settings
+        from raggg.pipeline.builder import build_knowledge_base
+        from raggg.pipeline.rag_pipeline import RAGPipeline
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            help_root = base / "helpHtml"
+            note_root = base / "vault"
+            dropbox = base / "knowledge_sources" / "user_dropbox"
+            data_dir = base / "data"
+            help_root.mkdir()
+            note_root.mkdir()
+            dropbox.mkdir(parents=True)
+            (dropbox / "SFgen.txt").write_text(
+                "SFgen is an MLLM-based agentic solution for symbol and footprint generation of PCB components.",
+                encoding="utf-8",
+            )
+            settings = Settings(
+                project_root=base,
+                waveda_help_root=help_root,
+                obsidian_vault_root=note_root,
+                data_dir=data_dir,
+                embedding_model="local",
+                llm_base_url="https://example.test/v1",
+                llm_api_key="test-key",
+                llm_model="test-model",
+                user_dropbox_root=dropbox,
+            )
+            build_knowledge_base(settings)
+            pipeline = RAGPipeline(settings)
+            denial = (
+                "\u6839\u636e\u63d0\u4f9b\u7684\u8d44\u6599\uff0c"
+                "\u672a\u627e\u5230\u5173\u4e8e\u201cSFgen\u201d\u7684"
+                "\u4efb\u4f55\u63cf\u8ff0\u3002\u56e0\u6b64\uff0c"
+                "\u65e0\u6cd5\u56de\u7b54\u3002"
+            )
+            pipeline.client.complete = lambda _prompt: denial  # type: ignore[method-assign]
+
+            answer = pipeline.ask("什么是SFgen")
+
+            self.assertIn("SFgen", answer.answer)
+            self.assertIn("MLLM", answer.answer)
+            self.assertNotIn("未找到关于", answer.answer)
+            self.assertIn("本地证据", answer.warning or "")
+
+    def test_pipeline_extracts_english_term_from_chinese_question(self):
+        from raggg.pipeline.rag_pipeline import RAGPipeline
+
+        self.assertEqual(RAGPipeline._question_terms("什么是SFgen"), {"sfgen"})
+
     def test_local_answer_removes_repeated_source_heading(self):
         from raggg.generation.prompt_builder import build_local_answer
         from raggg.models import Chunk
