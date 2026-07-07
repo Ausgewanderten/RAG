@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 import numpy as np
 
@@ -13,6 +14,7 @@ WAVEDA_TERMS = {"waveda", "端口", "边界", "pml", "网格", "仿真", "菜单
 FORMULA_TERMS = {"公式", "方程", "maxwell", "麦克斯韦", "推导", "积分", "微分", "边界条件"}
 DEFINITION_TERMS = {"什么是", "是什么", "定义"}
 WAVEDA_SOURCE_TYPES = {"waveda_help", "waveda_agent_kb"}
+USER_SOURCE_TYPES = {"user_dropbox"}
 MATERIAL_TERMS = {"fr-4", "pec", "air", "copper", "rogers", "duroid", "alumina", "silicon"}
 AGENT_KB_INTENT_BOOSTS = (
     (("报错", "错误", "警告", "失败", "排查", "日志", "不收敛"), ("troubleshooting", "error_cases", "constraint_warning"), 0.9),
@@ -50,6 +52,17 @@ def _lexical_overlap(query_tokens: set[str], content: str) -> float:
     return len(query_tokens & content_tokens) / len(query_tokens)
 
 
+def _compact_alnum(text: str) -> str:
+    return "".join(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def _english_terms(text: str) -> list[str]:
+    return [
+        term.lower()
+        for term in re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}", text)
+    ]
+
+
 class Retriever:
     def __init__(self, store: VectorStore) -> None:
         self.store = store
@@ -61,6 +74,8 @@ class Retriever:
         vector_scores = self.store.vectors @ query_vector
         query_tokens = set(tokenize(query))
         query_lower = query.lower()
+        query_english_terms = _english_terms(query)
+        compact_query_alnum = _compact_alnum(query)
 
         results: list[SearchResult] = []
         for index, chunk in enumerate(self.store.chunks):
@@ -80,6 +95,21 @@ class Retriever:
                 and compact_title in compact_query
             ):
                 score += 0.85
+            if chunk.source_type in USER_SOURCE_TYPES:
+                source_label = f"{chunk.title} {chunk.section} {chunk.relative_path}"
+                source_label_compact = _compact_alnum(source_label)
+                chunk_compact = _compact_alnum(f"{source_label} {chunk.content[:1200]}")
+                if compact_query_alnum and compact_query_alnum in source_label_compact:
+                    score += 1.2
+                if query_english_terms:
+                    label_hits = sum(1 for term in query_english_terms if term in source_label_compact)
+                    content_hits = sum(1 for term in query_english_terms if term in chunk_compact)
+                    if label_hits:
+                        score += 0.65 * label_hits
+                    if content_hits:
+                        score += 0.28 * content_hits
+                    if label_hits == len(query_english_terms):
+                        score += 0.65
             if chunk.source_type == "waveda_agent_kb":
                 path_lower = chunk.relative_path.lower()
                 for query_terms, path_terms, boost in AGENT_KB_INTENT_BOOSTS:

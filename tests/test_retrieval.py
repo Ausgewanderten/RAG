@@ -161,6 +161,72 @@ class RetrievalTests(unittest.TestCase):
 
         self.assertEqual(results[0].chunk.id, "material")
 
+    def test_user_dropbox_filename_phrase_beats_generic_notes(self):
+        from raggg.indexing.embeddings import HashedEmbeddingModel
+        from raggg.indexing.vector_store import VectorStore
+        from raggg.models import Chunk
+        from raggg.retrieval.retriever import Retriever
+
+        chunks = [
+            Chunk(
+                "generic",
+                "obsidian_note",
+                "note",
+                "01-基础概念/端口是什么.md",
+                "端口是什么",
+                "端口是什么",
+                "端口、后处理、网格划分和边界条件是多物理场仿真的基础概念。",
+                metadata={"domain": "multiphysics"},
+            ),
+            Chunk(
+                "smart",
+                "user_dropbox",
+                "dropbox",
+                "Smart E Book.docx",
+                "1.Cultural Dialogue",
+                "1.Cultural Dialogue",
+                "Smart E Book contains cultural dialogue materials, correction tables, grammar notes, and oral English practice content.",
+                metadata={"domain": "user"},
+            ),
+        ]
+        store = VectorStore.from_chunks(chunks, HashedEmbeddingModel(dimensions=32))
+        results = Retriever(store).search("Smart Ebook里面有什么?", top_k=2)
+
+        self.assertEqual(results[0].chunk.id, "smart")
+
+    def test_user_dropbox_compact_english_term_beats_definition_notes(self):
+        from raggg.indexing.embeddings import HashedEmbeddingModel
+        from raggg.indexing.vector_store import VectorStore
+        from raggg.models import Chunk
+        from raggg.retrieval.retriever import Retriever
+
+        chunks = [
+            Chunk(
+                "generic",
+                "obsidian_note",
+                "note",
+                "01-基础概念/Maxwell方程组是什么.md",
+                "Maxwell 方程组是什么",
+                "定义",
+                "Maxwell 方程组、端口和边界条件是电磁仿真的基础概念。",
+                metadata={"domain": "multiphysics"},
+            ),
+            Chunk(
+                "sfgen",
+                "user_dropbox",
+                "dropbox",
+                "SFgen_prcv.pdf",
+                "Symbol and Footprint Database",
+                "Abstract",
+                "SFgen is an automatic electronic component library construction pipeline for symbol and footprint generation.",
+                metadata={"domain": "user"},
+            ),
+        ]
+        store = VectorStore.from_chunks(chunks, HashedEmbeddingModel(dimensions=32))
+        results = Retriever(store).search("SFgen是什么?", top_k=2)
+
+        self.assertEqual(results[0].chunk.id, "sfgen")
+
     def test_specific_geometry_name_beats_generic_setting_page(self):
         from raggg.indexing.embeddings import HashedEmbeddingModel
         from raggg.indexing.vector_store import VectorStore
