@@ -5,7 +5,8 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from raggg.config import Settings
+from raggg.config import Settings, get_user_dropbox_root
+from raggg.loaders.user_file_loader import SUPPORTED_USER_EXTENSIONS
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,7 @@ def source_state_path(settings: Settings) -> Path:
 
 def compute_source_snapshot(settings: Settings) -> SourceSnapshot:
     records: list[str] = []
+    seen_paths: set[Path] = set()
     for root, patterns in _source_roots(settings):
         if not root.exists():
             continue
@@ -27,6 +29,10 @@ def compute_source_snapshot(settings: Settings) -> SourceSnapshot:
             for path in sorted(root.rglob(pattern)):
                 if not path.is_file():
                     continue
+                resolved_path = path.resolve()
+                if resolved_path in seen_paths:
+                    continue
+                seen_paths.add(resolved_path)
                 if any(part.startswith(".") for part in path.relative_to(root).parts):
                     continue
                 stat = path.stat()
@@ -67,4 +73,10 @@ def _source_roots(settings: Settings) -> list[tuple[Path, tuple[str, ...]]]:
         (settings.obsidian_vault_root, ("*.md",)),
     ]
     roots.extend((root, ("*.md",)) for root in settings.extra_markdown_roots)
+    roots.append(
+        (
+            get_user_dropbox_root(settings),
+            tuple(f"*{extension}" for extension in sorted(SUPPORTED_USER_EXTENSIONS)),
+        )
+    )
     return roots

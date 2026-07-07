@@ -10,7 +10,7 @@
 
 ## 当前能力
 
-- 合并 WavEDA HTML 帮助文档、Obsidian Markdown 笔记和额外 Markdown 资料源。
+- 合并 WavEDA HTML 帮助文档、Obsidian Markdown 笔记、额外 Markdown 资料源和用户投放资料。
 - 构建本地知识库索引。
 - 使用 WavEDA 优先的混合检索排序。
 - 支持 DeepSeek / OpenAI 兼容接口生成回答。
@@ -21,6 +21,7 @@
 - WavEDA 操作型问题会使用教程式结构：入口位置、操作步骤、关键参数、限制条件、常见错误、引用来源。
 - 提供 WavEDA 常见问题评测集，用于检查检索命中和回答模板质量。
 - 启动桌面工作台时自动检测资料源变化，发现更新后可一键重建知识库。
+- 桌面工作台支持“资料投放箱”，可添加 `.pdf`、`.docx`、`.xlsx`、`.md`、`.txt`、`.html`、`.csv`、`.json`、`.jsonl` 文件并一键更新知识库。
 - 右侧显示来源证据、来源类型、文件路径和匹配分数。
 
 ## 项目结构
@@ -37,6 +38,7 @@ D:\RAGGG
       vectors.npy               # 本地向量
   knowledge_sources\
     waveda_agent_kb\            # WavEDA Agent 结构化补充资料
+    user_dropbox\               # 用户从界面投放的资料
   docs\
     user_guide.md               # 使用说明
     progress\                   # 进度记录与截图
@@ -73,6 +75,7 @@ D:\RAGGG\.venv
 
 - `numpy`
 - `PySide6`
+- `pypdf`
 
 如需重新安装依赖：
 
@@ -120,6 +123,28 @@ RAG_EXTRA_MARKDOWN_ROOTS=knowledge_sources
 
 这表示系统会把 `D:\RAGGG\knowledge_sources` 下的 Markdown 文件一起纳入知识库。多个目录可用英文分号分隔。
 
+## 资料投放箱
+
+桌面工作台左侧提供“资料投放箱”：
+
+- `添加资料文件`：选择一个或多个资料文件。
+- `添加资料文件夹`：选择一个文件夹，系统会复制其中支持的资料文件。
+- `打开投放箱`：打开当前投放目录，便于手动查看。
+
+默认投放目录为：
+
+```text
+D:\RAGGG\knowledge_sources\user_dropbox
+```
+
+支持格式：
+
+```text
+.pdf .docx .xlsx .md .txt .html .htm .csv .json .jsonl
+```
+
+导入后软件会询问是否立即更新知识库。点击确认后，投放箱中的资料会作为“用户投放资料”进入检索结果，并在右侧来源证据中显示。
+
 ## 构建知识库
 
 ```powershell
@@ -134,6 +159,7 @@ documents=353
 waveda_documents=97
 obsidian_documents=105
 extra_documents=151
+user_documents=0
 chunks=3198
 data_dir=D:\RAGGG\data
 ```
@@ -165,7 +191,7 @@ py -3 app\desktop_app.py
 - 中间：问答区。
 - 右侧：来源证据卡片。
 
-启动时如果检测到 WavEDA 帮助文档、Obsidian 笔记或 `knowledge_sources` 中的 Markdown 资料发生变化，左侧状态会显示“资料有更新”，并提示是否一键更新知识库。
+启动时如果检测到 WavEDA 帮助文档、Obsidian 笔记、`knowledge_sources` 中的 Markdown 资料或资料投放箱发生变化，左侧状态会显示“资料有更新”，并提示是否一键更新知识库。
 
 ## 常用验证命令
 

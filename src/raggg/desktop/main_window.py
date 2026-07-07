@@ -3,12 +3,14 @@ from __future__ import annotations
 import html
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, QUrl, Signal, Slot
+from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import (
     QApplication,
+    QFileDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
@@ -23,8 +25,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from raggg.config import Settings, load_settings
+from raggg.config import Settings, get_user_dropbox_root, load_settings
 from raggg.pipeline.builder import BuildReport, build_knowledge_base
+from raggg.pipeline.dropbox import copy_to_dropbox
 from raggg.pipeline.rag_pipeline import RAGAnswer, RAGPipeline
 from raggg.pipeline.source_state import has_source_changes
 from raggg.retrieval.retriever import SearchResult
@@ -417,6 +420,20 @@ class WorkbenchWindow(QMainWindow):
         layout.addWidget(self.rebuild_button)
         layout.addWidget(self.reload_button)
 
+        dropbox_label = QLabel("资料投放箱")
+        dropbox_label.setObjectName("section")
+        layout.addSpacing(10)
+        layout.addWidget(dropbox_label)
+        self.add_files_button = self._button("添加资料文件")
+        self.add_files_button.clicked.connect(self._add_user_files)
+        self.add_folder_button = self._button("添加资料文件夹")
+        self.add_folder_button.clicked.connect(self._add_user_folder)
+        self.open_dropbox_button = self._button("打开投放箱")
+        self.open_dropbox_button.clicked.connect(self._open_dropbox)
+        layout.addWidget(self.add_files_button)
+        layout.addWidget(self.add_folder_button)
+        layout.addWidget(self.open_dropbox_button)
+
         prompt_label = QLabel("快捷问题")
         prompt_label.setObjectName("section")
         layout.addSpacing(10)
@@ -592,8 +609,66 @@ class WorkbenchWindow(QMainWindow):
         self.is_busy = busy
         self.activity_label.setText(text)
         self.activity_label.setStyleSheet(f"color: {COLORS['warning' if busy else 'accent']};")
-        for button in (self.ask_button, self.rebuild_button, self.reload_button):
+        for button in (
+            self.ask_button,
+            self.rebuild_button,
+            self.reload_button,
+            self.add_files_button,
+            self.add_folder_button,
+            self.open_dropbox_button,
+        ):
             button.setDisabled(busy)
+
+    def _add_user_files(self) -> None:
+        files, _selected_filter = QFileDialog.getOpenFileNames(
+            self,
+            "选择要加入知识库的资料",
+            str(get_user_dropbox_root(self.settings)),
+            "资料文件 (*.pdf *.docx *.xlsx *.md *.txt *.html *.htm *.csv *.json *.jsonl)",
+        )
+        if files:
+            self._import_user_sources([Path(file) for file in files])
+
+    def _add_user_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(
+            self,
+            "选择要加入知识库的资料文件夹",
+            str(self.settings.project_root),
+        )
+        if folder:
+            self._import_user_sources([Path(folder)])
+
+    def _open_dropbox(self) -> None:
+        dropbox_root = get_user_dropbox_root(self.settings)
+        dropbox_root.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(dropbox_root)))
+
+    def _import_user_sources(self, paths: list[Path]) -> None:
+        report = copy_to_dropbox(paths, get_user_dropbox_root(self.settings))
+        if not report.imported:
+            QMessageBox.information(
+                self,
+                "没有导入资料",
+                "没有找到支持的资料文件。当前支持 pdf、docx、xlsx、md、txt、html、csv、json、jsonl。",
+            )
+            return
+
+        message = f"已导入 {len(report.imported)} 个资料文件。"
+        if report.skipped:
+            message += f"\n另有 {len(report.skipped)} 个文件或文件夹未导入。"
+        message += "\n\n是否现在更新知识库？"
+        choice = QMessageBox.question(
+            self,
+            "资料已放入投放箱",
+            message,
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes,
+        )
+        if choice == QMessageBox.Yes:
+            self._rebuild_async()
+            return
+        if self.pipeline is not None:
+            self._check_source_updates(show_prompt=False)
 
     def _append_user(self, question: str) -> None:
         self.chat.append(
@@ -635,6 +710,9 @@ class WorkbenchWindow(QMainWindow):
             elif chunk.source_type == "waveda_agent_kb":
                 label = "WavEDA 教程资料"
                 label_color = COLORS["accent"]
+            elif chunk.source_type == "user_dropbox":
+                label = "用户投放资料"
+                label_color = COLORS["warning"]
             else:
                 label = "理论笔记"
                 label_color = COLORS["accent2"]

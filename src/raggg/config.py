@@ -50,6 +50,7 @@ class Settings:
     llm_api_key: str
     llm_model: str
     extra_markdown_roots: list[Path] = field(default_factory=list)
+    user_dropbox_root: Path | None = None
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -80,7 +81,15 @@ class Settings:
                 values.get("RAG_EXTRA_MARKDOWN_ROOTS", "knowledge_sources"),
                 project_root,
             ),
+            user_dropbox_root=_resolve_path(
+                values.get("RAG_USER_DROPBOX_ROOT", "knowledge_sources/user_dropbox"),
+                project_root,
+            ),
         )
+
+
+def get_user_dropbox_root(settings: Settings) -> Path:
+    return settings.user_dropbox_root or settings.project_root / "knowledge_sources" / "user_dropbox"
 
 
 def load_settings() -> Settings:

@@ -16,6 +16,7 @@ def main() -> int:
     print(f"waveda_documents={report.waveda_document_count}")
     print(f"obsidian_documents={report.obsidian_document_count}")
     print(f"extra_documents={report.extra_markdown_document_count}")
+    print(f"user_documents={report.user_document_count}")
     print(f"chunks={report.chunk_count}")
     print(f"data_dir={report.data_dir}")
     return 0

@@ -24,6 +24,8 @@ class ConfigTests(unittest.TestCase):
             Path(r"D:\暑期实践\多物理场仿真知识库"),
         )
 
+        self.assertEqual(settings.user_dropbox_root, ROOT / "knowledge_sources" / "user_dropbox")
+
     def test_environment_overrides_are_supported(self):
         from raggg.config import Settings
 
@@ -34,6 +36,7 @@ class ConfigTests(unittest.TestCase):
             "RAG_LLM_BASE_URL": "https://example.test/v1",
             "RAG_LLM_API_KEY": "secret",
             "RAG_LLM_MODEL": "test-model",
+            "RAG_USER_DROPBOX_ROOT": r"C:\dropbox",
         }
 
         settings = Settings.from_env(env)
@@ -44,6 +47,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(settings.llm_base_url, "https://example.test/v1")
         self.assertEqual(settings.llm_api_key, "secret")
         self.assertEqual(settings.llm_model, "test-model")
+        self.assertEqual(settings.user_dropbox_root, Path(r"C:\dropbox"))
 
     def test_dotenv_loader_ignores_missing_files(self):
         from raggg.config import load_dotenv_file
