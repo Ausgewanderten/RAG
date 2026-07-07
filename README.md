@@ -20,6 +20,7 @@
 - 回答中支持常见 LaTeX 公式可读化渲染，例如 `\oiint`、`\iiint`、`\frac`、`\partial`、`\rho_f` 等。
 - WavEDA 操作型问题会使用教程式结构：入口位置、操作步骤、关键参数、限制条件、常见错误、引用来源。
 - 提供 WavEDA 常见问题评测集，用于检查检索命中和回答模板质量。
+- 启动桌面工作台时自动检测资料源变化，发现更新后可一键重建知识库。
 - 右侧显示来源证据、来源类型、文件路径和匹配分数。
 
 ## 项目结构
@@ -42,6 +43,7 @@ D:\RAGGG
     superpowers\                # 设计文档与实施计划
   scripts\
     build_knowledge_base.py     # 构建知识库
+    check_source_updates.py     # 检查资料源是否变化
     smoke_test.py               # 基础问答验证
     debug_retrieval.py          # 检索排序诊断
     evaluate_waveda_qa.py       # WavEDA 常见问题评测
@@ -136,11 +138,14 @@ chunks=3198
 data_dir=D:\RAGGG\data
 ```
 
+构建成功后会写入 `D:\RAGGG\data\source_state.json`，用于下次启动时判断资料源是否发生变化。
+
 构建后会生成：
 
 ```text
 D:\RAGGG\data\raw_manifest.json
 D:\RAGGG\data\processed_chunks.json
+D:\RAGGG\data\source_state.json
 D:\RAGGG\data\index\chunks.json
 D:\RAGGG\data\index\vectors.npy
 ```
@@ -160,6 +165,8 @@ py -3 app\desktop_app.py
 - 中间：问答区。
 - 右侧：来源证据卡片。
 
+启动时如果检测到 WavEDA 帮助文档、Obsidian 笔记或 `knowledge_sources` 中的 Markdown 资料发生变化，左侧状态会显示“资料有更新”，并提示是否一键更新知识库。
+
 ## 常用验证命令
 
 运行完整测试：
@@ -173,6 +180,12 @@ cd /d D:\RAGGG
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\smoke_test.py
+```
+
+检查资料源是否变化：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\check_source_updates.py
 ```
 
 诊断检索排序：
@@ -190,7 +203,7 @@ cd /d D:\RAGGG
 当前测试状态：
 
 ```text
-38 tests passed
+41 tests passed
 WavEDA eval: 30/30 passed
 ```
 

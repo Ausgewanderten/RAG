@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from raggg.config import Settings, load_settings
 from raggg.pipeline.builder import BuildReport, build_knowledge_base
 from raggg.pipeline.rag_pipeline import RAGAnswer, RAGPipeline
+from raggg.pipeline.source_state import has_source_changes
 from raggg.retrieval.retriever import SearchResult
 
 
@@ -44,6 +45,9 @@ COLORS = {
     "danger": "#f87171",
     "input": "#0a1322",
 }
+
+
+SOURCE_UPDATE_MESSAGE = "检测到资料源有变化，建议一键更新知识库后再提问。"
 
 
 APP_STYLE = f"""
@@ -344,11 +348,13 @@ class WorkbenchWindow(QMainWindow):
         self.thread_pool = QThreadPool.globalInstance()
         self._active_workers: list[Worker] = []
         self.is_busy = False
+        self.sources_changed = False
         self.setWindowTitle("WavEDA Knowledge Workbench")
         self.resize(1360, 840)
         self.setMinimumSize(1120, 720)
         self._build_ui()
         self._load_pipeline_if_ready()
+        self._check_source_updates()
 
     def _build_ui(self) -> None:
         root = QWidget()
@@ -507,6 +513,33 @@ class WorkbenchWindow(QMainWindow):
         model_color = COLORS["accent"] if self.settings.llm_api_key else COLORS["warning"]
         self.model_card.set_value(model_name, model_color)
         self.sources.setHtml(self._empty_sources_html())
+        self._check_source_updates(show_prompt=False)
+
+    def _check_source_updates(self, show_prompt: bool = True) -> None:
+        if self.pipeline is None:
+            return
+        try:
+            self.sources_changed = has_source_changes(self.settings)
+        except Exception:
+            self.sources_changed = False
+            return
+        if not self.sources_changed:
+            self.status_card.set_value("已载入", COLORS["accent"])
+            self.rebuild_button.setText("重建知识库")
+            return
+        self.status_card.set_value("资料有更新", COLORS["warning"])
+        self.rebuild_button.setText("一键更新知识库")
+        self.sources.setHtml(self._empty_sources_html(SOURCE_UPDATE_MESSAGE))
+        if show_prompt:
+            choice = QMessageBox.question(
+                self,
+                "发现资料更新",
+                SOURCE_UPDATE_MESSAGE + "\n\n是否现在更新？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if choice == QMessageBox.Yes:
+                self._rebuild_async()
 
     def _rebuild_async(self) -> None:
         if self.is_busy:
@@ -519,6 +552,8 @@ class WorkbenchWindow(QMainWindow):
         self._start_worker(worker)
 
     def _on_rebuild_done(self, report: BuildReport) -> None:
+        self.sources_changed = False
+        self.rebuild_button.setText("重建知识库")
         self.chunk_card.set_value(str(report.chunk_count), COLORS["warning"])
         self._load_pipeline_if_ready()
 

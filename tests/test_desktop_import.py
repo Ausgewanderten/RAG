@@ -12,6 +12,12 @@ class DesktopImportTests(unittest.TestCase):
 
         self.assertTrue(hasattr(RAGDesktopApp, "run"))
 
+    def test_source_update_prompt_text_is_available(self):
+        from raggg.desktop.main_window import SOURCE_UPDATE_MESSAGE
+
+        self.assertIn("资料源", SOURCE_UPDATE_MESSAGE)
+        self.assertIn("一键更新", SOURCE_UPDATE_MESSAGE)
+
     def test_markdown_answer_is_rendered_without_raw_stars(self):
         from raggg.desktop.main_window import markdown_to_html
 

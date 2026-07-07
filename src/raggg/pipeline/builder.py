@@ -11,6 +11,7 @@ from raggg.loaders.html_loader import iter_html_documents
 from raggg.loaders.markdown_loader import iter_markdown_documents
 from raggg.models import Chunk, Document
 from raggg.preprocessing.chunker import chunk_documents
+from raggg.pipeline.source_state import write_source_state
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,7 @@ def build_knowledge_base(settings: Settings) -> BuildReport:
     _write_chunks(settings.data_dir / "processed_chunks.json", chunks)
     store = VectorStore.from_chunks(chunks, HashedEmbeddingModel())
     store.save(settings.data_dir / "index")
+    write_source_state(settings)
 
     return BuildReport(
         document_count=len(documents),
